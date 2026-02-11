@@ -84,8 +84,11 @@ const Rooms: React.FC = () => {
                 <p className="text-gray-600 mt-4 text-sm line-clamp-2">{room.description}</p>
                 
                 <div className="flex justify-end items-center pt-4 mt-4 border-t border-gray-100 gap-2">
-                  <button className="text-yellow-600 hover:text-yellow-700 font-medium text-sm px-3 py-1 rounded hover:bg-yellow-50 transition">
-                    Edit
+                  <button 
+                        onClick={() => navigate(`/rooms/edit/${room.id}`)}
+                        className="text-yellow-600 hover:text-yellow-700 font-medium text-sm px-3 py-1 rounded hover:bg-yellow-50 transition"
+                    >
+                        Edit
                   </button>
                   <button 
                     onClick={() => handleDelete(room.id)}

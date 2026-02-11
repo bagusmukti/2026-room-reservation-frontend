@@ -4,6 +4,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard'; 
 import Rooms from './pages/Rooms';
 import AddRoom from './pages/AddRoom';
+import EditRoom from './pages/EditRoom';
 
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/rooms" element={<Rooms />} />
         <Route path="/rooms/add" element={<AddRoom />} />
+        <Route path="/rooms/edit/:id" element={<EditRoom />} />
       </Routes>
     </Router>
   );
