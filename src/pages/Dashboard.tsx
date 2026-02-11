@@ -68,21 +68,33 @@ const Dashboard: React.FC = () => {
     // Continer Utama
     <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
       
-      {/* Header Dashboard */}
+      {/* Header dashboard */}
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center mb-8 bg-white p-6 rounded-xl shadow-sm gap-4">
         <div className="text-center sm:text-left">
           <h1 className="text-2xl font-bold text-gray-900">Dashboard {role}</h1>
           <p className="text-gray-500 mt-1">
-            Halo, <span className="font-semibold text-blue-600">{user}</span>! Selamat beraktivitas.
+            Halo, <span className="font-semibold text-blue-600">{user}</span>!
           </p>
         </div>
         
-        <button 
-          onClick={handleLogout} 
-          className="w-full sm:w-auto bg-red-500 text-white px-6 py-2.5 rounded-lg hover:bg-red-600 transition shadow-sm font-medium"
-        >
-          Keluar
-        </button>
+        <div className="flex gap-3 w-full sm:w-auto">
+          {/* Button khusus admin */}
+          {role === 'Admin' && (
+            <button 
+              onClick={() => navigate('/rooms')}
+              className="flex-1 sm:flex-none bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 transition shadow-sm font-medium"
+            >
+              Kelola Ruangan
+            </button>
+          )}
+
+          <button 
+            onClick={handleLogout} 
+            className="flex-1 sm:flex-none bg-red-500 text-white px-6 py-2.5 rounded-lg hover:bg-red-600 transition shadow-sm font-medium"
+          >
+            Keluar
+          </button>
+        </div>
       </div>
 
       {/* Konten Tabel */}
