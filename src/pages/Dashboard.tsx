@@ -8,16 +8,20 @@ import ReservationModal from '../components/ReservationModal';
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   
-  // State Data User & API
+  // State Data Utama
   const [user, setUser] = useState<string>('');
   const [role, setRole] = useState<string>('');
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // State Kontrol Modal
+  // State Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // State for Search & Filter
+  const [searchTerm, setSearchTerm] = useState(''); // For text input
+  const [statusFilter, setStatusFilter] = useState('all'); // For status dropdown
 
   const getStatusLabel = (status: number) => {
     switch (status) {
@@ -61,13 +65,11 @@ const Dashboard: React.FC = () => {
     navigate('/login');
   };
 
-  // --- Logika Modal ---
   const handleOpenDetail = (item: Reservation) => {
     setSelectedReservation(item);
     setIsModalOpen(true);
   };
 
-  // Logika Approve (Status -> 1)
   const handleApprove = async (id: number) => {
     if(!confirm("Yakin ingin menyetujui peminjaman ini?")) return;
     setActionLoading(true);
@@ -75,7 +77,7 @@ const Dashboard: React.FC = () => {
       await api.put(`/reservations/${id}/status`, { status: 1 });
       alert("Berhasil disetujui!");
       setIsModalOpen(false);
-      fetchReservations(); // Refresh tabel otomatis
+      fetchReservations();
     } catch (error) {
       console.error("Gagal approve", error);
       alert("Gagal memproses.");
@@ -84,7 +86,6 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Logika Reject (Status -> 2)
   const handleReject = async (id: number) => {
     if(!confirm("Yakin ingin menolak peminjaman ini?")) return;
     setActionLoading(true);
@@ -92,7 +93,7 @@ const Dashboard: React.FC = () => {
       await api.put(`/reservations/${id}/status`, { status: 2 });
       alert("Berhasil ditolak.");
       setIsModalOpen(false);
-      fetchReservations(); // Refresh tabel otomatis
+      fetchReservations();
     } catch (error) {
       console.error("Gagal reject", error);
       alert("Gagal memproses.");
@@ -101,43 +102,84 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Filtering Logic
+  const filteredReservations = reservations.filter((item) => {
+    // 1. Filter Pencarian Teks 
+    const matchesSearch = 
+      item.borrowerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.room?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.purpose.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // 2. Filter Dropdown Status
+    const matchesStatus = 
+      statusFilter === 'all' || 
+      item.status.toString() === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
-      {/* Header */}
+      {/* Header Dashboard */}
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center mb-8 bg-white p-6 rounded-xl shadow-sm gap-4">
         <div className="text-center sm:text-left">
           <h1 className="text-2xl font-bold text-gray-900">Dashboard {role}</h1>
-          <p className="text-gray-500 mt-1">Halo, <span className="font-semibold text-blue-600">{user}</span>!</p>
+          <p className="text-gray-500 mt-1">Halo, selamat datang<span className="font-semibold text-blue-600">{user}</span>!</p>
         </div>
         <div className="flex gap-3 w-full sm:w-auto">
           {role === 'Admin' && (
-            <button 
-              onClick={() => navigate('/rooms')} 
-              className="flex-1 sm:flex-none bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 transition shadow-sm font-medium"
-            >
+            <button onClick={() => navigate('/rooms')} className="flex-1 sm:flex-none bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 transition shadow-sm font-medium">
               Kelola Ruangan
             </button>
           )}
-          <button 
-            onClick={handleLogout} 
-            className="flex-1 sm:flex-none bg-red-500 text-white px-6 py-2.5 rounded-lg hover:bg-red-600 transition shadow-sm font-medium"
-          >
+          <button onClick={handleLogout} className="flex-1 sm:flex-none bg-red-500 text-white px-6 py-2.5 rounded-lg hover:bg-red-600 transition shadow-sm font-medium">
             Keluar
           </button>
         </div>
       </div>
 
-      {/* Tabel */}
       <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <h2 className="text-lg font-bold text-gray-800">Riwayat Peminjaman Ruangan</h2>
+        
+        {/* Section Search n Filter */}
+        <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/50">
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-1">
+            
+            {/* Input Search */}
+            <div className="relative w-full sm:w-64">
+              <input 
+                type="text"
+                placeholder="Cari nama, ruangan..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <svg className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+
+            {/* Dropdown Filter Status */}
+            <select 
+              className="w-full sm:w-48 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">Semua Status</option>
+              <option value="0">Pending</option>
+              <option value="1">Approved</option>
+              <option value="2">Rejected</option>
+            </select>
+          </div>
+
+          {/* Tombol Ajukan (Milik User) */}
           {role === 'User' && (
-            <button className="w-full sm:w-auto bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium transition shadow-sm">
+            <button className="w-full md:w-auto bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium transition shadow-sm">
               + Ajukan Baru
             </button>
           )}
         </div>
 
+        {/* Tabel data */}
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[600px]">
             <thead>
@@ -152,10 +194,11 @@ const Dashboard: React.FC = () => {
             <tbody className="text-gray-600 text-sm font-medium">
               {loading ? (
                 <tr><td colSpan={5} className="text-center py-8">Sedang memuat data...</td></tr>
-              ) : reservations.length === 0 ? (
-                <tr><td colSpan={5} className="text-center py-8 text-gray-400">Belum ada data peminjaman.</td></tr>
+              ) : filteredReservations.length === 0 ? ( 
+                <tr><td colSpan={5} className="text-center py-8 text-gray-400">Data tidak ditemukan.</td></tr>
               ) : (
-                reservations.map((item) => (
+                /* Mapping dari filteredReservations */
+                filteredReservations.map((item) => (
                   <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition duration-150">
                     <td className="py-4 px-6 text-gray-900">{item.borrowerName}</td>
                     <td className="py-4 px-6 text-blue-600">{item.room?.name}</td>
@@ -167,7 +210,6 @@ const Dashboard: React.FC = () => {
                     </td>
                     <td className="py-4 px-6 text-center">{getStatusLabel(item.status)}</td>
                     <td className="py-4 px-6 text-center">
-                      {/* Tombol Detail (Pemicu Modal) */}
                       <button 
                         onClick={() => handleOpenDetail(item)}
                         className="text-blue-600 hover:text-blue-800 font-bold text-xs border border-blue-200 px-3 py-1 rounded hover:bg-blue-50 transition"
@@ -181,9 +223,13 @@ const Dashboard: React.FC = () => {
             </tbody>
           </table>
         </div>
+        
+        {/* Footer Info Jumlah Data */}
+        <div className="p-4 bg-gray-50 border-t border-gray-100 text-xs text-gray-500 text-center">
+          Menampilkan {filteredReservations.length} dari total {reservations.length} data.
+        </div>
       </div>
 
-      {/* Render Modal */}
       <ReservationModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
