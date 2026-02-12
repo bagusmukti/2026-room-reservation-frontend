@@ -5,6 +5,8 @@ import Dashboard from './pages/Dashboard';
 import Rooms from './pages/Rooms';
 import AddRoom from './pages/AddRoom';
 import EditRoom from './pages/EditRoom';
+import UserRooms from './pages/UserRooms'; 
+import CreateReservation from './pages/CreateReservation'; 
 
 
 function App() {
@@ -19,6 +21,8 @@ function App() {
         <Route path="/rooms" element={<Rooms />} />
         <Route path="/rooms/add" element={<AddRoom />} />
         <Route path="/rooms/edit/:id" element={<EditRoom />} />
+        <Route path="/user/rooms" element={<UserRooms />} />
+        <Route path="/book/:roomId" element={<CreateReservation />} />
       </Routes>
     </Router>
   );
