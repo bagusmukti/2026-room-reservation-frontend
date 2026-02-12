@@ -10,6 +10,7 @@ const Dashboard: React.FC = () => {
   
   // State Data Utama
   const [user, setUser] = useState<string>('');
+  const [usernameDisplay, setUsernameDisplay] = useState<string>(''); 
   const [role, setRole] = useState<string>('');
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,8 +21,8 @@ const Dashboard: React.FC = () => {
   const [actionLoading, setActionLoading] = useState(false);
 
   // State for Search & Filter
-  const [searchTerm, setSearchTerm] = useState(''); // For text input
-  const [statusFilter, setStatusFilter] = useState('all'); // For status dropdown
+  const [searchTerm, setSearchTerm] = useState(''); 
+  const [statusFilter, setStatusFilter] = useState('all'); 
 
   const getStatusLabel = (status: number) => {
     switch (status) {
@@ -34,6 +35,13 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    
+    // Ambil username dari LocalStorage untuk sapaan
+    const storedName = localStorage.getItem('username');
+    if (storedName) {
+        setUsernameDisplay(storedName);
+    }
+
     if (!token) {
       navigate('/login');
       return;
@@ -104,13 +112,11 @@ const Dashboard: React.FC = () => {
 
   // Filtering Logic
   const filteredReservations = reservations.filter((item) => {
-    // 1. Filter Pencarian Teks 
     const matchesSearch = 
       item.borrowerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.room?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.purpose.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // 2. Filter Dropdown Status
     const matchesStatus = 
       statusFilter === 'all' || 
       item.status.toString() === statusFilter;
@@ -124,7 +130,9 @@ const Dashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center mb-8 bg-white p-6 rounded-xl shadow-sm gap-4">
         <div className="text-center sm:text-left">
           <h1 className="text-2xl font-bold text-gray-900">Dashboard {role}</h1>
-          <p className="text-gray-500 mt-1">Halo, selamat datang<span className="font-semibold text-blue-600">{user}</span>!</p>
+          <p className="text-gray-500 mt-1">
+            Halo, selamat datang <span className="font-semibold text-blue-600">{usernameDisplay || user}</span>!
+          </p>
         </div>
         <div className="flex gap-3 w-full sm:w-auto">
           {role === 'Admin' && (
@@ -171,9 +179,12 @@ const Dashboard: React.FC = () => {
             </select>
           </div>
 
-          {/* Tombol Ajukan (Milik User) */}
+          {/* Tombol Ajuan (Milik User) */}
           {role === 'User' && (
-            <button className="w-full md:w-auto bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium transition shadow-sm">
+            <button 
+              onClick={() => navigate('/user/rooms')}
+              className="w-full sm:w-auto bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium transition shadow-sm"
+            >
               + Ajukan Baru
             </button>
           )}
@@ -197,7 +208,6 @@ const Dashboard: React.FC = () => {
               ) : filteredReservations.length === 0 ? ( 
                 <tr><td colSpan={5} className="text-center py-8 text-gray-400">Data tidak ditemukan.</td></tr>
               ) : (
-                /* Mapping dari filteredReservations */
                 filteredReservations.map((item) => (
                   <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition duration-150">
                     <td className="py-4 px-6 text-gray-900">{item.borrowerName}</td>
@@ -224,7 +234,6 @@ const Dashboard: React.FC = () => {
           </table>
         </div>
         
-        {/* Footer Info Jumlah Data */}
         <div className="p-4 bg-gray-50 border-t border-gray-100 text-xs text-gray-500 text-center">
           Menampilkan {filteredReservations.length} dari total {reservations.length} data.
         </div>
