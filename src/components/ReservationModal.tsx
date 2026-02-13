@@ -88,30 +88,27 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
 
         {/* Footer Actions */}
         <div className="mt-6 flex justify-end gap-3 border-t pt-4">
-          <button
-            onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
-          >
+          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition">
             Tutup
           </button>
 
-          {/* Logika Tombol: Hanya muncul jika role Admin dan Status Pending */}
-          {userRole === 'Admin' && reservation.status === 0 && (
+          {userRole === 'Admin' && (
             <>
-              <button
-                onClick={() => onReject(reservation.id)}
-                disabled={loadingAction}
-                className="rounded-lg bg-red-100 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-200 transition"
-              >
-                {loadingAction ? '...' : 'Tolak'}
-              </button>
-              <button
-                onClick={() => onApprove(reservation.id)}
-                disabled={loadingAction}
-                className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition shadow-sm"
-              >
-                {loadingAction ? '...' : 'Setujui'}
-              </button>
+              {/* Jangan munculkan tombol Tolak jika sudah Ditolak (agar tidak redundant) */}
+              {reservation.status !== 2 && (
+                <button onClick={() => onReject(reservation.id)} disabled={loadingAction}
+                  className="rounded-lg bg-red-100 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-200 transition">
+                  {loadingAction ? '...' : 'Tolak'}
+                </button>
+              )}
+              
+              {/* Jangan munculkan tombol Setujui jika sudah Disetujui */}
+              {reservation.status !== 1 && (
+                <button onClick={() => onApprove(reservation.id)} disabled={loadingAction}
+                  className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition shadow-sm">
+                  {loadingAction ? '...' : 'Setujui'}
+                </button>
+              )}
             </>
           )}
         </div>
