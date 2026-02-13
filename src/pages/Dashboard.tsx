@@ -8,19 +8,16 @@ import ReservationModal from '../components/ReservationModal';
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   
-  // State Data Utama
   const [user, setUser] = useState<string>('');
-  const [usernameDisplay, setUsernameDisplay] = useState<string>(''); 
+  const [usernameDisplay, setUsernameDisplay] = useState<string>('');
   const [role, setRole] = useState<string>('');
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // State Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
-  // State for Search & Filter
   const [searchTerm, setSearchTerm] = useState(''); 
   const [statusFilter, setStatusFilter] = useState('all'); 
 
@@ -35,12 +32,8 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    
-    // Ambil username dari LocalStorage untuk sapaan
     const storedName = localStorage.getItem('username');
-    if (storedName) {
-        setUsernameDisplay(storedName);
-    }
+    if (storedName) setUsernameDisplay(storedName);
 
     if (!token) {
       navigate('/login');
@@ -86,9 +79,9 @@ const Dashboard: React.FC = () => {
       alert("Berhasil disetujui!");
       setIsModalOpen(false);
       fetchReservations();
-    } catch (error) {
-      console.error("Gagal approve", error);
-      alert("Gagal memproses.");
+    } catch (error: any) {
+      const msg = error.response?.data?.message || "Gagal memproses.";
+      alert(msg);
     } finally {
       setActionLoading(false);
     }
@@ -102,15 +95,28 @@ const Dashboard: React.FC = () => {
       alert("Berhasil ditolak.");
       setIsModalOpen(false);
       fetchReservations();
-    } catch (error) {
-      console.error("Gagal reject", error);
-      alert("Gagal memproses.");
+    } catch (error: any) {
+      const msg = error.response?.data?.message || "Gagal memproses.";
+      alert(msg);
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Filtering Logic
+  const handleDelete = async (id: number) => {
+    if(!confirm("Yakin ingin menghapus data ini secara permanen?")) return;
+    setLoading(true);
+    try {
+        await api.delete(`/reservations/${id}`);
+        alert("Data berhasil dihapus.");
+        fetchReservations();
+    } catch (error: any) {
+        console.error("Gagal hapus", error);
+        alert(error.response?.data?.message || "Gagal menghapus data.");
+        setLoading(false);
+    }
+  };
+
   const filteredReservations = reservations.filter((item) => {
     const matchesSearch = 
       item.borrowerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -126,7 +132,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
-      {/* Header Dashboard */}
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center mb-8 bg-white p-6 rounded-xl shadow-sm gap-4">
         <div className="text-center sm:text-left">
           <h1 className="text-2xl font-bold text-gray-900">Dashboard {role}</h1>
@@ -148,29 +153,21 @@ const Dashboard: React.FC = () => {
 
       <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
         
-        {/* Section Search n Filter */}
         <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/50">
           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-1">
-            
-            {/* Input Search */}
             <div className="relative w-full sm:w-64">
               <input 
-                type="text"
-                placeholder="Cari nama, ruangan..."
+                type="text" placeholder="Cari nama, ruangan..."
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
               />
               <svg className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
             </div>
-
-            {/* Dropdown Filter Status */}
             <select 
               className="w-full sm:w-48 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
             >
               <option value="all">Semua Status</option>
               <option value="0">Pending</option>
@@ -178,19 +175,13 @@ const Dashboard: React.FC = () => {
               <option value="2">Rejected</option>
             </select>
           </div>
-
-          {/* Tombol Ajuan (Milik User) */}
           {role === 'User' && (
-            <button 
-              onClick={() => navigate('/user/rooms')}
-              className="w-full sm:w-auto bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium transition shadow-sm"
-            >
+            <button onClick={() => navigate('/user/rooms')} className="w-full sm:w-auto bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium transition shadow-sm">
               + Ajukan Baru
             </button>
           )}
         </div>
 
-        {/* Tabel data */}
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[600px]">
             <thead>
@@ -199,7 +190,7 @@ const Dashboard: React.FC = () => {
                 <th className="py-4 px-6">Ruangan</th>
                 <th className="py-4 px-6 text-center">Waktu</th>
                 <th className="py-4 px-6 text-center">Status</th>
-                <th className="py-4 px-6 text-center">Aksi</th>
+                <th className="py-4 px-2 text-center">Aksi</th> 
               </tr>
             </thead>
             <tbody className="text-gray-600 text-sm font-medium">
@@ -212,20 +203,46 @@ const Dashboard: React.FC = () => {
                   <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition duration-150">
                     <td className="py-4 px-6 text-gray-900">{item.borrowerName}</td>
                     <td className="py-4 px-6 text-blue-600">{item.room?.name}</td>
+                    
                     <td className="py-4 px-6 text-center">
                       <div className="flex flex-col">
                         <span>{new Date(item.startTime).toLocaleDateString()}</span>
                         <span className="text-xs text-gray-400">{new Date(item.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                       </div>
                     </td>
+                    
                     <td className="py-4 px-6 text-center">{getStatusLabel(item.status)}</td>
-                    <td className="py-4 px-6 text-center">
-                      <button 
-                        onClick={() => handleOpenDetail(item)}
-                        className="text-blue-600 hover:text-blue-800 font-bold text-xs border border-blue-200 px-3 py-1 rounded hover:bg-blue-50 transition"
-                      >
-                        Detail
-                      </button>
+                    
+                    <td className="py-4 px-2 text-center whitespace-nowrap">
+                      <div className="flex justify-center items-center gap-2">
+                        
+                        <button onClick={() => handleOpenDetail(item)}
+                          className="text-blue-600 hover:text-blue-800 font-bold text-xs border border-blue-200 px-3 py-1 rounded hover:bg-blue-50 transition">
+                          Detail
+                        </button>
+
+                        {role === 'User' && item.status === 0 && (
+                          <>
+                            <button onClick={() => navigate(`/reservation/edit/${item.id}`)}
+                              className="text-yellow-600 hover:text-yellow-800 font-bold text-xs border border-yellow-200 px-3 py-1 rounded hover:bg-yellow-50 transition">
+                              Edit
+                            </button>
+                            <button onClick={() => handleDelete(item.id)}
+                              className="text-red-600 hover:text-red-800 font-bold text-xs border border-red-200 px-3 py-1 rounded hover:bg-red-50 transition">
+                              Batal
+                            </button>
+                          </>
+                        )}
+
+                        {role === 'Admin' && (
+                            <button onClick={() => handleDelete(item.id)}
+                              className="text-red-600 hover:text-red-800 font-bold text-xs border border-red-200 px-3 py-1 rounded hover:bg-red-50 transition"
+                              title="Hapus Data">
+                              Hapus
+                            </button>
+                        )}
+
+                      </div>
                     </td>
                   </tr>
                 ))
